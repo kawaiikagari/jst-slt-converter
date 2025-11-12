@@ -1,0 +1,34 @@
+<div>
+  <p>JST 開始: <span id="jstStart">--:--</span></p>
+  <p>JST 終了: <span id="jstEnd">--:--</span></p>
+  <p>SLT 開始: <span id="sltStart">--:--</span></p>
+  <p>SLT 終了: <span id="sltEnd">--:--</span></p>
+</div>
+
+<script>
+function getParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+}
+
+function convertJSTtoSLT(jst) {
+    if (!jst) return "--:--";
+    const [hour, minute] = jst.split(":").map(Number);
+    const now = new Date();
+    const utcDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), hour - 9, minute));
+    return utcDate.toLocaleTimeString("en-US", {
+        timeZone: "America/Los_Angeles",
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+const jstStart = getParam("start");
+const jstEnd = getParam("end");
+
+document.getElementById("jstStart").innerText = jstStart || "--:--";
+document.getElementById("jstEnd").innerText = jstEnd || "--:--";
+document.getElementById("sltStart").innerText = convertJSTtoSLT(jstStart);
+document.getElementById("sltEnd").innerText = convertJSTtoSLT(jstEnd);
+</script>
