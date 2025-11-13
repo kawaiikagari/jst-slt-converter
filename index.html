@@ -1,60 +1,63 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JST ⇄ SLT 時刻変換 / JST ⇄ SLT Time Converter</title>
+  <title>JST ⇄ SLT Time Converter</title>
   <style>
     body {
-      font-family: "Segoe UI", "Hiragino Sans", sans-serif;
-      background: #f7f9fc;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f9fafc;
       color: #222;
       text-align: center;
       padding: 40px;
     }
-    h1 { font-size: 1.8em; margin-bottom: 0.5em; }
-    p { margin: 0.3em 0; }
-    .result {
-      margin-top: 20px;
-      font-size: 1.4em;
-      font-weight: bold;
+    h1 { font-size: 1.8em; margin-bottom: 0.3em; }
+    p { font-size: 0.95em; color: #555; }
+    table {
+      margin: 30px auto;
+      border-collapse: collapse;
+      width: 300px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
     }
-    .note {
-      margin-top: 25px;
-      font-size: 0.9em;
-      color: #555;
+    th, td {
+      padding: 10px 15px;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: #f0f3f8;
+      text-align: left;
+    }
+    tr:last-child td { border-bottom: none; }
+    code {
+      background: #eee;
+      padding: 2px 5px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-  <h1>🕒 JST ⇄ SLT 時刻変換<br>JST ⇄ SLT Time Converter</h1>
-  <p>URL 末尾に <code>?start=22:00&end=23:30</code> のように指定してください。<br>
-  Add <code>?start=22:00&end=23:30</code> at the end of the URL.</p>
+  <h1>🕒 JST ⇄ SLT Time Converter</h1>
+  <p>Specify times in the URL, for example:<br>
+  <code>?start=22:00&end=23:30</code></p>
 
-  <div class="result" id="output">変換中... / Converting...</div>
-
-  <div class="note">
-    <p>※ 現在 SLT は <b id="tzName">Pacific Standard Time (PST)</b> です。</p>
-    <p>* Currently, SLT is <b id="tzNameEn">Pacific Standard Time (PST)</b>.</p>
-  </div>
+  <table>
+    <tr><th colspan="3">Event Time</th></tr>
+    <tr><td></td><td><b>Start</b></td><td><b>End</b></td></tr>
+    <tr><td><b>JST</b></td><td id="jstStart">–</td><td id="jstEnd">–</td></tr>
+    <tr><td><b>SLT</b> (<span id="tzName">PST/PDT</span>)</td><td id="sltStart">–</td><td id="sltEnd">–</td></tr>
+  </table>
 
   <script>
     function getParams() {
-      const urlParams = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(window.location.search);
       return {
-        start: urlParams.get("start"),
-        end: urlParams.get("end"),
+        start: params.get("start"),
+        end: params.get("end")
       };
-    }
-
-    function convertJSTtoSLT(jstTimeStr) {
-      if (!jstTimeStr) return null;
-      const [hours, minutes] = jstTimeStr.split(":").map(Number);
-      const now = new Date();
-      const jst = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), hours - 9, minutes));
-      const sltOffset = now.isDST ? -7 : -8; // PDT or PST
-      jst.setUTCHours(jst.getUTCHours() + sltOffset);
-      return jst;
     }
 
     function isDST(date = new Date()) {
@@ -63,39 +66,38 @@
       return Math.min(jan, jul) != date.getTimezoneOffset();
     }
 
-    function displayTimes() {
-      const { start, end } = getParams();
-      if (!start) {
-        document.getElementById("output").innerText = "JST 時刻を指定してください。 / Please specify JST time.";
-        return;
-      }
-
-      const now = new Date();
-      now.isDST = isDST(now);
-      const tzName = now.isDST ? "Pacific Daylight Time (PDT)" : "Pacific Standard Time (PST)";
-      document.getElementById("tzName").innerText = tzName;
-      document.getElementById("tzNameEn").innerText = tzName;
-
-      function fmt(d) {
-        return d.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        });
-      }
-
-      const startSLT = convertJSTtoSLT(start);
-      const endSLT = end ? convertJSTtoSLT(end) : null;
-
-      let output = `JST ${start}`;
-      if (end) output += ` – ${end}`;
-      output += `<br>→ SLT ${fmt(startSLT)}`;
-      if (endSLT) output += ` – ${fmt(endSLT)}`;
-
-      document.getElementById("output").innerHTML = output;
+    function convertJSTtoSLT(jstStr, useDST) {
+      if (!jstStr) return null;
+      const [h, m] = jstStr.split(":").map(Number);
+      const jst = new Date(Date.UTC(2025, 0, 1, h - 9, m)); // JST = UTC+9
+      const sltOffset = useDST ? -7 : -8; // PDT or PST
+      jst.setUTCHours(jst.getUTCHours() + sltOffset);
+      return jst;
     }
 
-    displayTimes();
+    function fmt(d) {
+      return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    }
+
+    function display() {
+      const { start, end } = getParams();
+      if (!start) return;
+
+      const dst = isDST();
+      const tzName = dst ? "Pacific Daylight Time (PDT)" : "Pacific Standard Time (PST)";
+      document.getElementById("tzName").innerText = tzName;
+
+      document.getElementById("jstStart").innerText = start;
+      document.getElementById("jstEnd").innerText = end ? end : "–";
+
+      const s1 = convertJSTtoSLT(start, dst);
+      const s2 = end ? convertJSTtoSLT(end, dst) : null;
+
+      document.getElementById("sltStart").innerText = s1 ? fmt(s1) : "–";
+      document.getElementById("sltEnd").innerText = s2 ? fmt(s2) : "–";
+    }
+
+    display();
   </script>
 </body>
 </html>
