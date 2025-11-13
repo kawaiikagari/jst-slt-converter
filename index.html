@@ -48,7 +48,7 @@
     <tr><th colspan="3">Event Time</th></tr>
     <tr><td></td><td><b>Start</b></td><td><b>End</b></td></tr>
     <tr><td><b>JST</b></td><td id="jstStart">–</td><td id="jstEnd">–</td></tr>
-    <tr><td><b>SLT</b> (<span id="tzName">PST/PDT</span>)</td><td id="sltStart">–</td><td id="sltEnd">–</td></tr>
+    <tr><td><b>SLT</b> (<span id="tzShort">PST/PDT</span>)</td><td id="sltStart">–</td><td id="sltEnd">–</td></tr>
   </table>
 
   <div class="note">
@@ -88,8 +88,8 @@
       if (!start) return;
 
       const dst = isDST();
-      const tzName = dst ? "Pacific Daylight Time (PDT)" : "Pacific Standard Time (PST)";
-      document.getElementById("tzName").innerText = tzName;
+      const tzShort = dst ? "PDT" : "PST";
+      document.getElementById("tzShort").innerText = tzShort;
 
       document.getElementById("jstStart").innerText = start;
       document.getElementById("jstEnd").innerText = end ? end : "–";
