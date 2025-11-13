@@ -26,3 +26,82 @@
       border-bottom: 1px solid #eee;
     }
     th {
+      background: #f0f3f8;
+      text-align: left;
+    }
+    tr:last-child td { border-bottom: none; }
+    .note {
+      font-size: 0.8em;
+      color: #666;
+      margin-top: 20px;
+    }
+    code {
+      background: #eee;
+      padding: 2px 5px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <table>
+    <tr><th colspan="3">Event Time</th></tr>
+    <tr><td></td><td><b>Start</b></td><td><b>End</b></td></tr>
+    <tr><td><b>JST</b></td><td id="jstStart">–</td><td id="jstEnd">–</td></tr>
+    <tr><td><b>SLT</b> (<span id="tzName">PST/PDT</span>)</td><td id="sltStart">–</td><td id="sltEnd">–</td></tr>
+  </table>
+
+  <div class="note">
+    Specify times in the URL, for example: <code>?start=22:00&end=23:30</code>
+  </div>
+
+  <script>
+    function getParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        start: params.get("start"),
+        end: params.get("end")
+      };
+    }
+
+    function isDST(date = new Date()) {
+      const jan = new Date(date.getFullYear(), 0, 1).getTimezoneOffset();
+      const jul = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
+      return Math.min(jan, jul) != date.getTimezoneOffset();
+    }
+
+    function convertJSTtoSLT(jstStr, useDST) {
+      if (!jstStr) return null;
+      const [h, m] = jstStr.split(":").map(Number);
+      const jst = new Date(Date.UTC(2025, 0, 1, h - 9, m)); // JST = UTC+9
+      const sltOffset = useDST ? -7 : -8; // PDT or PST
+      jst.setUTCHours(jst.getUTCHours() + sltOffset);
+      return jst;
+    }
+
+    function fmt(d) {
+      return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    }
+
+    function display() {
+      const { start, end } = getParams();
+      if (!start) return;
+
+      const dst = isDST();
+      const tzName = dst ? "Pacific Daylight Time (PDT)" : "Pacific Standard Time (PST)";
+      document.getElementById("tzName").innerText = tzName;
+
+      document.getElementById("jstStart").innerText = start;
+      document.getElementById("jstEnd").innerText = end ? end : "–";
+
+      const s1 = convertJSTtoSLT(start, dst);
+      const s2 = end ? convertJSTtoSLT(end, dst) : null;
+
+      document.getElementById("sltStart").innerText = s1 ? fmt(s1) : "–";
+      document.getElementById("sltEnd").innerText = s2 ? fmt(s2) : "–";
+    }
+
+    display();
+  </script>
+</body>
+</html>
