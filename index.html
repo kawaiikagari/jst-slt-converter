@@ -1,27 +1,55 @@
-<div>
-  <p>JST 開始: <span id="jstStart">--:--</span></p>
-  <p>JST 終了: <span id="jstEnd">--:--</span></p>
-  <p>SLT 開始: <span id="sltStart">--:--</span></p>
-  <p>SLT 終了: <span id="sltEnd">--:--</span></p>
-</div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JST → SLT Time Converter</title>
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #fafafa;
+  color: #222;
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h1 { font-size: 1.4em; text-align: center; margin-bottom: 1em; }
+.timebox { background: #fff; border-radius: 8px; padding: 10px 15px; margin-bottom: 10px; }
+.label { font-weight: bold; }
+.value { float: right; }
+.note { font-size: 0.9em; color: #666; text-align: center; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<h1>JST → SLT (Pacific Time) 変換</h1>
+
+<div class="timebox"><span class="label">JST 開始:</span> <span id="jstStart" class="value">--:--</span></div>
+<div class="timebox"><span class="label">JST 終了:</span> <span id="jstEnd" class="value">--:--</span></div>
+<div class="timebox"><span class="label">SLT 開始:</span> <span id="sltStart" class="value">--:--</span></div>
+<div class="timebox"><span class="label">SLT 終了:</span> <span id="sltEnd" class="value">--:--</span></div>
+
+<p class="note">例: <code>?start=22:00&end=23:30</code> を URL の末尾に付けてください。</p>
 
 <script>
 function getParam(name) {
-    const params = new URLSearchParams(window.location.search);
-    return params.get(name);
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
 }
 
 function convertJSTtoSLT(jst) {
-    if (!jst) return "--:--";
-    const [hour, minute] = jst.split(":").map(Number);
-    const now = new Date();
-    const utcDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), hour - 9, minute));
-    return utcDate.toLocaleTimeString("en-US", {
-        timeZone: "America/Los_Angeles",
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit"
-    });
+  if (!jst) return "--:--";
+  const [hour, minute] = jst.split(":").map(Number);
+  const now = new Date();
+  const utcDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), hour - 9, minute));
+  return utcDate.toLocaleTimeString("en-US", {
+    timeZone: "America/Los_Angeles",
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 const jstStart = getParam("start");
@@ -32,3 +60,6 @@ document.getElementById("jstEnd").innerText = jstEnd || "--:--";
 document.getElementById("sltStart").innerText = convertJSTtoSLT(jstStart);
 document.getElementById("sltEnd").innerText = convertJSTtoSLT(jstEnd);
 </script>
+
+</body>
+</html>
