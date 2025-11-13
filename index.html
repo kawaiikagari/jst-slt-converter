@@ -64,41 +64,51 @@
       };
     }
 
-    function isDST(date = new Date()) {
-      const jan = new Date(date.getFullYear(), 0, 1).getTimezoneOffset();
-      const jul = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
-      return Math.min(jan, jul) != date.getTimezoneOffset();
-    }
-
-    function convertJSTtoSLT(jstStr, useDST) {
+    function convertJSTtoSLT(jstStr) {
       if (!jstStr) return null;
-      const [h, m] = jstStr.split(":").map(Number);
-      const jst = new Date(Date.UTC(2025, 0, 1, h - 9, m)); // JST = UTC+9
-      const sltOffset = useDST ? -7 : -8; // PDT or PST
-      jst.setUTCHours(jst.getUTCHours() + sltOffset);
-      return jst;
+      const [h,m] = jstStr.split(":").map(Number);
+      const now = new Date();
+      now.setHours(h, m, 0, 0); // JST as local
+      // Convert to SLT using timezone
+      return now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "America/Los_Angeles"
+      });
     }
 
-    function fmt(d) {
-      return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    function getSLTShort(jstStr) {
+      if (!jstStr) return "–";
+      const [h,m] = jstStr.split(":").map(Number);
+      const now = new Date();
+      now.setHours(h, m, 0, 0);
+      const sltStr = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "America/Los_Angeles",
+        timeZoneName: "short"
+      });
+      const match = sltStr.match(/\b(PDT|PST)\b/);
+      return match ? match[0] : "PST/PDT";
     }
 
     function display() {
       const { start, end } = getParams();
       if (!start) return;
 
-      const dst = isDST();
-      const tzShort = dst ? "PDT" : "PST";
-      document.getElementById("tzShort").innerText = tzShort;
-
       document.getElementById("jstStart").innerText = start;
       document.getElementById("jstEnd").innerText = end ? end : "–";
 
-      const s1 = convertJSTtoSLT(start, dst);
-      const s2 = end ? convertJSTtoSLT(end, dst) : null;
+      const sltStart = convertJSTtoSLT(start);
+      const sltEnd = end ? convertJSTtoSLT(end) : null;
 
-      document.getElementById("sltStart").innerText = s1 ? fmt(s1) : "–";
-      document.getElementById("sltEnd").innerText = s2 ? fmt(s2) : "–";
+      document.getElementById("sltStart").innerText = sltStart;
+      document.getElementById("sltEnd").innerText = sltEnd ? sltEnd : "–";
+
+      // Set short timezone label
+      document.getElementById("tzShort").innerText = getSLTShort(start);
     }
 
     display();
