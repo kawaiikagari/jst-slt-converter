@@ -30,23 +30,29 @@
       text-align: left;
     }
     tr:last-child td { border-bottom: none; }
-    .note, .info {
-      font-size: 0.8em;
-      color: #666;
-      margin-top: 15px;
-      text-align: left;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
+
     code {
       background: #eee;
       padding: 2px 5px;
       border-radius: 5px;
     }
-    .info b {
-      display: block;
-      margin-top: 10px;
+
+    .info-table {
+      margin: 20px auto 40px auto;
+      width: 320px;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .info-table th, .info-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    .info-table th {
+      background: #f0f3f8;
     }
   </style>
 </head>
@@ -60,23 +66,26 @@
   </table>
 
   <div class="note">
-    URL での時刻指定例：<code>?start=22:00&end=23:30</code><br>
+    URLで時刻指定例: <code>?start=22:00&end=23:30</code><br>
     Specify times in the URL, for example: <code>?start=22:00&end=23:30</code>
   </div>
 
-  <div class="info">
-    <b>PDT / PST 切り替え時期の目安</b>
-    - PDT（夏時間）：3月第2日曜日 ～ 11月第1日曜日<br>
-    - PST（標準時）：11月第1日曜日 ～ 翌年3月第2日曜日<br>
-    - PDT (Daylight Time): 2nd Sunday of March ~ 1st Sunday of November<br>
-    - PST (Standard Time): 1st Sunday of November ~ 2nd Sunday of March
-
-    <b>一般的な JST ↔ SLT 計算目安</b>
-    - JST → PDT: JST - 16 時間<br>
-    - JST → PST: JST - 17 時間<br>
-    - Approximate conversion JST → PDT: JST - 16h<br>
-    - Approximate conversion JST → PST: JST - 17h
-  </div>
+  <table class="info-table">
+    <tr><th>Information / 情報</th></tr>
+    <tr><td>
+      <b>PDT / PST 切り替え時期の目安</b><br>
+      - PDT（夏時間）：3月第2日曜日 ～ 11月第1日曜日<br>
+      - PST（標準時）：11月第1日曜日 ～ 翌年3月第2日曜日<br>
+      - PDT (Daylight Time): 2nd Sunday of March ~ 1st Sunday of November<br>
+      - PST (Standard Time): 1st Sunday of November ~ 2nd Sunday of March
+      <br><br>
+      <b>一般的な JST ↔ SLT 計算目安</b><br>
+      - JST → PDT: JST - 16 時間<br>
+      - JST → PST: JST - 17 時間<br>
+      - Approximate conversion JST → PDT: JST - 16h<br>
+      - Approximate conversion JST → PST: JST - 17h
+    </td></tr>
+  </table>
 
   <script>
     function getParams() {
@@ -90,18 +99,16 @@
     function convertJSTtoSLT(jstStr) {
       if (!jstStr) return null;
       const [h, m] = jstStr.split(":").map(Number);
-
       const now = new Date();
       const utcDate = new Date(Date.UTC(
         now.getFullYear(),
         now.getMonth(),
         now.getDate(),
-        h - 9, // JST → UTC
+        h - 9,
         m,
         0,
         0
       ));
-
       return utcDate.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
@@ -113,7 +120,6 @@
     function getSLTShort(jstStr) {
       if (!jstStr) return "–";
       const [h, m] = jstStr.split(":").map(Number);
-
       const now = new Date();
       const utcDate = new Date(Date.UTC(
         now.getFullYear(),
@@ -124,7 +130,6 @@
         0,
         0
       ));
-
       const sltStr = utcDate.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
@@ -132,7 +137,6 @@
         timeZone: "America/Los_Angeles",
         timeZoneName: "short"
       });
-
       const match = sltStr.match(/\b(PDT|PST)\b/);
       return match ? match[0] : "PST/PDT";
     }
