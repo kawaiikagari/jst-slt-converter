@@ -13,7 +13,7 @@
       padding: 40px 20px;
     }
     table {
-      margin: 60px auto 20px auto;
+      margin: 40px auto 20px auto;
       border-collapse: collapse;
       width: 320px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -30,15 +30,23 @@
       text-align: left;
     }
     tr:last-child td { border-bottom: none; }
-    .note {
+    .note, .info {
       font-size: 0.8em;
       color: #666;
-      margin-top: 20px;
+      margin-top: 15px;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
     code {
       background: #eee;
       padding: 2px 5px;
       border-radius: 5px;
+    }
+    .info b {
+      display: block;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -52,11 +60,25 @@
   </table>
 
   <div class="note">
+    URL での時刻指定例：<code>?start=22:00&end=23:30</code><br>
     Specify times in the URL, for example: <code>?start=22:00&end=23:30</code>
   </div>
 
+  <div class="info">
+    <b>PDT / PST 切り替え時期の目安</b>
+    - PDT（夏時間）：3月第2日曜日 ～ 11月第1日曜日<br>
+    - PST（標準時）：11月第1日曜日 ～ 翌年3月第2日曜日<br>
+    - PDT (Daylight Time): 2nd Sunday of March ~ 1st Sunday of November<br>
+    - PST (Standard Time): 1st Sunday of November ~ 2nd Sunday of March
+
+    <b>一般的な JST ↔ SLT 計算目安</b>
+    - JST → PDT: JST - 16 時間<br>
+    - JST → PST: JST - 17 時間<br>
+    - Approximate conversion JST → PDT: JST - 16h<br>
+    - Approximate conversion JST → PST: JST - 17h
+  </div>
+
   <script>
-    // URLパラメータ取得
     function getParams() {
       const params = new URLSearchParams(window.location.search);
       return {
@@ -65,18 +87,16 @@
       };
     }
 
-    // JST → SLT (PST/PDT) 変換
     function convertJSTtoSLT(jstStr) {
       if (!jstStr) return null;
       const [h, m] = jstStr.split(":").map(Number);
 
       const now = new Date();
-      // JSTをUTCに変換 (UTC = JST - 9h)
       const utcDate = new Date(Date.UTC(
         now.getFullYear(),
         now.getMonth(),
         now.getDate(),
-        h - 9,
+        h - 9, // JST → UTC
         m,
         0,
         0
@@ -90,7 +110,6 @@
       });
     }
 
-    // 短縮タイムゾーン名取得
     function getSLTShort(jstStr) {
       if (!jstStr) return "–";
       const [h, m] = jstStr.split(":").map(Number);
@@ -118,7 +137,6 @@
       return match ? match[0] : "PST/PDT";
     }
 
-    // 表示処理
     function display() {
       const { start, end } = getParams();
       if (!start) return;
