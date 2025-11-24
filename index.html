@@ -56,6 +56,7 @@
   </div>
 
   <script>
+    // URLパラメータ取得
     function getParams() {
       const params = new URLSearchParams(window.location.search);
       return {
@@ -64,13 +65,24 @@
       };
     }
 
+    // JST → SLT (PST/PDT) 変換
     function convertJSTtoSLT(jstStr) {
       if (!jstStr) return null;
-      const [h,m] = jstStr.split(":").map(Number);
+      const [h, m] = jstStr.split(":").map(Number);
+
       const now = new Date();
-      now.setHours(h, m, 0, 0); // JST as local
-      // Convert to SLT using timezone
-      return now.toLocaleTimeString("en-US", {
+      // JSTをUTCに変換 (UTC = JST - 9h)
+      const utcDate = new Date(Date.UTC(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        h - 9,
+        m,
+        0,
+        0
+      ));
+
+      return utcDate.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
@@ -78,22 +90,35 @@
       });
     }
 
+    // 短縮タイムゾーン名取得
     function getSLTShort(jstStr) {
       if (!jstStr) return "–";
-      const [h,m] = jstStr.split(":").map(Number);
+      const [h, m] = jstStr.split(":").map(Number);
+
       const now = new Date();
-      now.setHours(h, m, 0, 0);
-      const sltStr = now.toLocaleTimeString("en-US", {
+      const utcDate = new Date(Date.UTC(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        h - 9,
+        m,
+        0,
+        0
+      ));
+
+      const sltStr = utcDate.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
         timeZone: "America/Los_Angeles",
         timeZoneName: "short"
       });
+
       const match = sltStr.match(/\b(PDT|PST)\b/);
       return match ? match[0] : "PST/PDT";
     }
 
+    // 表示処理
     function display() {
       const { start, end } = getParams();
       if (!start) return;
@@ -107,7 +132,6 @@
       document.getElementById("sltStart").innerText = sltStart;
       document.getElementById("sltEnd").innerText = sltEnd ? sltEnd : "–";
 
-      // Set short timezone label
       document.getElementById("tzShort").innerText = getSLTShort(start);
     }
 
